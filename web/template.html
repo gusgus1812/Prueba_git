@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reservas de Hidrocarburos</title>
+<meta name="description" content="Dashboard interactivo de reservas 1P, 2P y 3P de 477 campos de México (corte 01-01-2024).">
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1d2330; --mute:#5d6676; --line:#dcd9d0; --accent:#0f6b5c; --accent-ink:#ffffff;
+  --terr:#2f855a; --mar:#2b6cb0; --som:#c98a0b;
+  --p1:#0f6b5c; --p2:#3f9e8c; --p3:#a8d5cb;
+  --aceite:#8b5a2b; --gas:#5aa7d6; --mixto:#9a9a72; --cond:#b0558a;
+  --warn:#b4411f; --focus:#e0a100;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#12161d;--panel:#1b212b;--ink:#e8ebf0;--mute:#9aa4b4;--line:#2d3644;--accent:#4fbfa8;--accent-ink:#0b1a17;
+  --terr:#5cc08b;--mar:#6aa8e8;--som:#e5b13a;--p1:#4fbfa8;--p2:#2f8f7e;--p3:#1d5c52;--aceite:#c58a4e;--gas:#7cc0ea;--mixto:#b3b38a;--cond:#d57fb0;--warn:#ff8a66;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+header.top{padding:18px 24px 10px;border-bottom:1px solid var(--line);background:var(--panel)}
+header.top h1{margin:0;font-size:22px;letter-spacing:.2px}
+header.top p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:10px 24px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.grp{display:flex;align-items:center;gap:6px}
+.grp>label,.grp>span.l{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);padding:6px 12px;cursor:pointer;font:inherit}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);padding:5px 11px;border-radius:99px;cursor:pointer;font:inherit;font-size:13px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+input[type=search],select{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input[type=search]{min-width:200px}
+.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+nav.tabs{display:flex;gap:2px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:0;background:transparent;color:var(--mute);padding:11px 14px;cursor:pointer;font:inherit;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+main{padding:20px 24px 60px;max-width:1500px;margin:0 auto}
+section.tp{display:none}
+section.tp.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .v{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.kpi .t{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
+.kpi .s{font-size:12px;color:var(--mute)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;min-width:0}
+.card.wide{grid-column:1/-1}
+.card h2{margin:0 0 2px;font-size:16px}
+.card .sub{margin:0 0 8px;color:var(--mute);font-size:12.5px}
+.chart{outline-offset:3px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.tip{min-height:22px;margin-top:6px;font-size:13px;color:var(--ink);background:var(--bg);border-radius:8px;padding:3px 10px}
+.mk{cursor:pointer;transition:opacity .15s}
+.mk.dim{opacity:.35}
+.mk.cur{stroke:var(--focus)!important;stroke-width:3!important}
+.mk.sel{stroke:var(--ink)!important;stroke-width:2.5!important}
+svg text{fill:var(--ink);font-size:11px}
+svg .mute{fill:var(--mute)}
+svg .grid line{stroke:var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mute);margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:6px}
+.filters .chip{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+aside.det{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:12px 16px;margin-bottom:18px}
+aside.det h2{margin:0;font-size:18px}
+aside.det dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 16px;margin:8px 0 0}
+aside.det dt{font-size:11px;color:var(--mute);text-transform:uppercase}
+aside.det dd{margin:0;font-weight:600}
+.tw{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3),th:last-child,td:last-child{text-align:left}
+th{position:sticky;top:0;background:var(--panel);z-index:2}
+th button{all:unset;cursor:pointer;font-weight:700}
+th button:focus-visible{outline:3px solid var(--focus)}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr.sel{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+td.cm{max-width:340px;overflow:hidden;text-overflow:ellipsis}
+#map{height:560px;border-radius:12px;border:1px solid var(--line)}
+.note{background:color-mix(in srgb,var(--som) 16%,var(--panel));border:1px solid color-mix(in srgb,var(--som) 50%,var(--line));border-radius:10px;padding:10px 14px;font-size:13.5px;margin:0 0 14px}
+.gl{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.gl div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.gl h3{margin:0 0 3px;font-size:15px;color:var(--accent)}
+.gl p{margin:0;font-size:13.5px}
+ul.hall{padding-left:20px;margin:0}
+ul.hall li{margin:6px 0}
+kbd{background:var(--bg);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;font:12px ui-monospace,monospace}
+.sr{position:absolute;left:-9999px}
+.rng{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
+footer{padding:20px 24px;color:var(--mute);font-size:12.5px;text-align:center}
+@media (max-width:640px){main{padding:14px 12px 50px}.bar{padding:8px 12px}header.top{padding:14px 12px 8px}nav.tabs{padding:0 8px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Reservas de hidrocarburos de México · 477 campos</h1>
+  <p>Corte 01-01-2024 · Reservas 1P, 2P y 3P en millones de barriles de petróleo crudo equivalente (MMBPCE). Fuente de los datos: CNH / SENER (archivo "Campos Reservas 01-01-2024").</p>
+</header>
+
+<div class="bar" role="toolbar" aria-label="Filtros globales">
+  <div class="grp"><span class="l" id="lcat">Reserva</span>
+    <div class="seg" role="group" aria-labelledby="lcat" id="segcat"></div></div>
+  <div class="grp"><span class="l" id="lub">Ubicación</span><div id="chipub" role="group" aria-labelledby="lub" style="display:flex;gap:5px;flex-wrap:wrap"></div></div>
+  <div class="grp"><label for="q">Buscar</label><input id="q" type="search" placeholder="Nombre del campo ( / )"></div>
+  <div class="grp"><button class="btn" id="reset">Limpiar todo (Esc)</button></div>
+</div>
+<nav class="tabs" role="tablist" aria-label="Secciones" id="tabs"></nav>
+
+<main>
+<div class="filters" id="filters" aria-live="polite"></div>
+<aside class="det" id="det" aria-live="polite" hidden></aside>
+
+<section class="tp on" id="t-resumen" role="tabpanel">
+  <div class="kpis" id="kpis"></div>
+  <div class="grid">
+    <div class="card" id="c-ub"><h2>Reservas por ubicación</h2><p class="sub">Dona: participación de cada ubicación en la reserva seleccionada. Clic o Enter = filtrar.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div></div>
+    <div class="card" id="c-top"><h2>Campos más grandes</h2><p class="sub">Barras horizontales. Clic o Enter = ver detalle del campo.</p>
+      <div class="rng"><label for="topn">Mostrar top</label><input type="range" id="topn" min="5" max="40" value="15"><output id="topno">15</output></div>
+      <div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div></div>
+    <div class="card wide"><h2>Hallazgos (se recalculan con los filtros)</h2><ul class="hall" id="hall"></ul></div>
+  </div>
+</section>
+
+<section class="tp" id="t-graficas" role="tabpanel">
+  <p class="note">Todas las gráficas se mueven con el teclado: <kbd>Tab</kbd> para entrar, <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> para recorrer elementos, <kbd>Enter</kbd> para seleccionar/filtrar, <kbd>Home</kbd>/<kbd>End</kbd> para saltar a los extremos y <kbd>Esc</kbd> para limpiar.</p>
+  <div class="grid">
+    <div class="card" id="c-pie"><h2>Pastel: ¿quién concentra la reserva?</h2><p class="sub">Los 8 campos más grandes frente al resto.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div></div>
+    <div class="card" id="c-grp"><h2>1P vs 2P vs 3P por ubicación</h2><p class="sub">Barras agrupadas (MMBPCE). La brecha entre barras es la incertidumbre.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div><div class="legend" id="lg-cat"></div></div>
+    <div class="card" id="c-flu"><h2>Tipo de fluido dominante</h2><p class="sub">Aceite, gas o mixto según la proporción de líquidos en la reserva (≥70 % aceite, ≤30 % gas).</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div></div>
+    <div class="card" id="c-comp"><h2>Composición de la reserva por ubicación</h2><p class="sub">Crudo + condensado vs gas (convertido a crudo equivalente, factor ≈ 0.2 MMBPCE por MMMPC).</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div><div class="legend"><span><i style="background:var(--aceite)"></i>Crudo</span><span><i style="background:var(--cond)"></i>Condensado</span><span><i style="background:var(--gas)"></i>Gas (equiv.)</span></div></div>
+    <div class="card" id="c-tam"><h2>Histograma: tamaño de los campos</h2><p class="sub">Cantidad de campos por rango de reserva (MMBPCE). La mayoría son pequeños.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div></div>
+    <div class="card" id="c-com"><h2>Lo que dicen los comentarios</h2><p class="sub">Campos con nota en el archivo. Clic = filtrar.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div></div>
+    <div class="card wide" id="c-sc"><h2>Dispersión: superficie vs reserva</h2><p class="sub">Escala logarítmica. Arriba-izquierda = campos compactos y muy productivos. Solo campos con superficie y reserva &gt; 0.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div><div class="legend"><span><i style="background:var(--terr)"></i>Terrestre</span><span><i style="background:var(--mar)"></i>Marino</span></div></div>
+    <div class="card wide" id="c-par"><h2>Pareto: concentración acumulada</h2><p class="sub">Cada punto es un campo ordenado de mayor a menor. La línea punteada marca el 80 %.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div></div>
+    <div class="card wide" id="c-stk"><h2>De dónde viene la reserva de los grandes campos</h2><p class="sub">Barras apiladas: probada (1P) + probable + posible. Cuanto más claro, más incierto.</p><div class="chart cbody" tabindex="0"></div><div class="tip" aria-live="polite"></div><div class="legend"><span><i style="background:var(--p1)"></i>1P probada</span><span><i style="background:var(--p2)"></i>Probable (2P−1P)</span><span><i style="background:var(--p3)"></i>Posible (3P−2P)</span></div></div>
+  </div>
+</section>
+
+<section class="tp" id="t-campos" role="tabpanel">
+  <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+    <button class="btn pri" id="dlcsv">Descargar CSV filtrado</button>
+    <button class="btn" id="dljson">Descargar JSON filtrado</button>
+    <span id="tcount" style="color:var(--mute);font-size:13px"></span>
+  </div>
+  <div class="tw"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+  <p class="sub" style="color:var(--mute);font-size:12.5px">Encabezados = ordenar (Enter). Filas: <kbd>↑</kbd><kbd>↓</kbd> para moverse, <kbd>Enter</kbd> para seleccionar.</p>
+</section>
+
+<section class="tp" id="t-mapa" role="tabpanel">
+  <p class="note"><b>Sobre el mapa:</b> el archivo de reservas no incluye coordenadas, y el <a href="https://mapa-hidrocarburos.energia.gob.mx/" target="_blank" rel="noopener">Mapa de Hidrocarburos</a> (CNH/SENER) mostraba un aviso de mantenimiento cuando lo consulté, sin ofrecer descarga directa. Por eso aquí solo hay unos pocos campos con una ubicación <b>referencial</b> (±50 km o más). Carga tus propios archivos abajo y el mapa se llena con todo. Ver <code>docs/fuente_mapa.md</code>.</p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;align-items:center;font-size:13px">
+    <label>Coordenadas de campos (CSV <code>nombre,lat,lon</code>) <input type="file" id="fcamp" accept=".csv"></label>
+    <label>Pozos (CSV <code>pozo,lat,lon,campo</code>) <input type="file" id="fpozo" accept=".csv"></label>
+    <button class="btn" id="clrmap">Borrar mis archivos cargados</button>
+    <span id="mapinfo" style="color:var(--mute)"></span>
+  </div>
+  <div id="map" role="application" aria-label="Mapa de campos"></div>
+  <div id="mapfall" class="note" hidden>No se pudo cargar la librería del mapa (Leaflet). Necesitas conexión a internet para ver el mapa base.</div>
+</section>
+
+<section class="tp" id="t-calidad" role="tabpanel">
+  <div class="grid">
+    <div class="card"><h2>Calidad de los datos</h2><ul class="hall" id="qual"></ul></div>
+    <div class="card"><h2>Comentarios del archivo</h2><div class="tw" style="max-height:420px"><table id="tcom"><thead><tr><th>#</th><th>Campo</th><th>Ubic.</th><th>2P</th><th>Comentario</th></tr></thead><tbody></tbody></table></div></div>
+  </div>
+</section>
+
+<section class="tp" id="t-glosario" role="tabpanel">
+  <div class="gl" id="gl"></div>
+</section>
+
+<section class="tp" id="t-ayuda" role="tabpanel">
+  <div class="card"><h2>Atajos de teclado</h2>
+  <ul class="hall">
+    <li><kbd>1</kbd>–<kbd>7</kbd> cambia de pestaña (o <kbd>←</kbd><kbd>→</kbd> sobre las pestañas).</li>
+    <li><kbd>P</kbd> cicla 1P → 2P → 3P. <kbd>U</kbd> cicla la ubicación (todas → terrestre → marino → aguas someras).</li>
+    <li><kbd>/</kbd> enfoca el buscador. <kbd>Esc</kbd> limpia filtros y selección. <kbd>?</kbd> abre esta ayuda.</li>
+    <li>En cualquier gráfica: <kbd>Tab</kbd> entra, flechas recorren, <kbd>Enter</kbd> selecciona o filtra.</li>
+    <li>En el mapa: flechas mueven, <kbd>+</kbd>/<kbd>−</kbd> acercan, <kbd>Tab</kbd> recorre marcadores.</li>
+  </ul></div>
+</section>
+</main>
+<footer>Proyecto de análisis de reservas · datos CNH/SENER · hecho con HTML, CSS y JavaScript sin dependencias (salvo el mapa base). Los datos de este dashboard son del archivo cargado; consulta la fuente oficial para decisiones.</footer>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+/*__DATA_BLOCK__*/
+const DATA = /*__DATA__*/[];
+const RESUMEN = /*__RESUMEN__*/{};
+const COORDS_INI = /*__COORDS__*/[];
+const POZOS_INI = /*__POZOS__*/[];
+
+/* ---------- utilidades ---------- */
+const $ = (s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const nf = (v,d=1)=> v==null||isNaN(v)?'—':Number(v).toLocaleString('es-MX',{minimumFractionDigits:d,maximumFractionDigits:d});
+const nf0 = v=>nf(v,0);
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CATS={'1p':'1P · Probadas','2p':'2P · Probadas + Probables','3p':'3P · Probadas + Probables + Posibles'};
+const UBS=['Terrestre','Marino','Aguas someras'];
+const UBC={'Terrestre':'var(--terr)','Marino':'var(--mar)','Aguas someras':'var(--som)'};
+const FLC={'Aceite':'var(--aceite)','Gas':'var(--gas)','Mixto':'var(--mixto)','Sin reserva':'var(--line)'};
+const TAMS=['Sin reserva 2P','< 1','1 - 10','10 - 50','50 - 200','> 200'];
+const state={cat:'2p',ub:new Set(),q:'',sel:null,topN:15,tam:null,flu:null,tc:null,sort:{k:'rank_2p',dir:1}};
+const V=(d,c=state.cat)=>d['pce_'+c]||0;
+const byName=Object.fromEntries(DATA.map(d=>[d.nombre,d]));
+
+function filtered(skip){
+  const q=state.q.trim().toUpperCase();
+  return DATA.filter(d=>
+    (skip==='ub'||!state.ub.size||state.ub.has(d.ubicacion)) &&
+    (!q||d.nombre.includes(q)) &&
+    (skip==='tam'||!state.tam||d.tamano_2p===state.tam) &&
+    (skip==='flu'||!state.flu||d.fluido_dominante===state.flu) &&
+    (skip==='tc'||!state.tc||d.tipo_comentario===state.tc));
+}
+
+/* ---------- motor de gráficas con teclado ---------- */
+const charts={};
+function mount(id,svg,items,mode){
+  const card=$('#'+id), box=$('.cbody',card);
+  const prev=charts[id];
+  box.innerHTML=svg;
+  charts[id]={items,cur:-1,mode:mode||'list',box,tip:$('.tip',card)};
+  if(!box.dataset.bound){
+    box.dataset.bound='1';
+    box.addEventListener('mouseover',e=>{const m=e.target.closest('.mk');if(m)setCur(id,+m.dataset.i,true)});
+    box.addEventListener('click',e=>{const m=e.target.closest('.mk');if(m){setCur(id,+m.dataset.i,true);act(id)}});
+    box.addEventListener('focus',()=>{const c=charts[id];if(c.cur<0&&c.items.length)setCur(id,0)});
+    box.addEventListener('keydown',e=>navKey(id,e));
+  }
+  box.setAttribute('aria-label',card.querySelector('h2').textContent+'. Usa las flechas para recorrer y Enter para seleccionar.');
+  if(prev&&prev.cur>=0&&document.activeElement===box&&items[prev.cur])setCur(id,prev.cur);
+}
+function setCur(id,i,noFocus){
+  const c=charts[id];if(!c||!c.items[i])return;
+  $$('.mk.cur',c.box).forEach(n=>n.classList.remove('cur'));
+  const n=c.box.querySelector(`.mk[data-i="${i}"]`);if(n)n.classList.add('cur');
+  c.cur=i;c.tip.textContent=c.items[i].tip;
+  $('#live').textContent=c.items[i].tip;
+}
+function act(id){const c=charts[id];const it=c&&c.items[c.cur];if(it&&it.action)it.action()}
+function navKey(id,e){
+  const c=charts[id];if(!c||!c.items.length)return;
+  const k=e.key;let i=c.cur<0?0:c.cur;
+  if(k==='Enter'||k===' '){e.preventDefault();act(id);return}
+  if(k==='Escape'){return}
+  if(k==='Home'){i=0}else if(k==='End'){i=c.items.length-1}
+  else if(k.startsWith('Arrow')){
+    e.preventDefault();
+    if(c.mode==='xy'){
+      const cu=c.items[i];const dx=k==='ArrowRight'?1:k==='ArrowLeft'?-1:0, dy=k==='ArrowDown'?1:k==='ArrowUp'?-1:0;
+      let best=-1,bs=1e12;
+      c.items.forEach((o,j)=>{if(j===i)return;const vx=o.cx-cu.cx,vy=o.cy-cu.cy;const along=vx*dx+vy*dy;if(along<=0)return;
+        const perp=Math.abs(vx*dy-vy*dx);const s=along+perp*1.6;if(s<bs){bs=s;best=j}});
+      if(best>=0)i=best;
+    }else{
+      if(k==='ArrowRight'||k==='ArrowDown')i=Math.min(c.items.length-1,i+1);else i=Math.max(0,i-1);
+    }
+  }else return;
+  e.preventDefault();setCur(id,i);
+}
+
+/* ---------- primitivas SVG ---------- */
+function polar(cx,cy,r,a){return[cx+r*Math.cos(a),cy+r*Math.sin(a)]}
+function arcPath(cx,cy,r0,r1,a0,a1){
+  if(a1-a0>=Math.PI*2-1e-4)a1=a0+Math.PI*2-1e-4;
+  const l=a1-a0>Math.PI?1:0,[x0,y0]=polar(cx,cy,r1,a0),[x1,y1]=polar(cx,cy,r1,a1),[x2,y2]=polar(cx,cy,r0,a1),[x3,y3]=polar(cx,cy,r0,a0);
+  return`M${x0},${y0}A${r1},${r1} 0 ${l} 1 ${x1},${y1}L${x2},${y2}A${r0},${r0} 0 ${l} 0 ${x3},${y3}Z`;
+}
+function donut(id,rows,{inner=.58,center=''}={}){
+  const tot=rows.reduce((s,r)=>s+r.value,0)||1,W=520,H=300,cx=150,cy=150,R=125;
+  let a=-Math.PI/2;const items=[];let p='';
+  rows.forEach((r,i)=>{
+    const da=r.value/tot*Math.PI*2,a1=a+da,mid=(a+a1)/2;
+    const [x,y]=polar(cx,cy,R*(1+inner)/2,mid);
+    const cls='mk'+(r.dim?' dim':'')+(r.sel?' sel':'');
+    p+=`<path class="${cls}" data-i="${i}" d="${arcPath(cx,cy,R*inner,R,a,a1)}" style="fill:${r.color};stroke:var(--panel);stroke-width:2"/>`;
+    items.push({tip:`${r.label}: ${nf(r.value)} (${nf(r.value/tot*100)} %)${r.extra||''}`,action:r.action,cx:x,cy:y});
+    a=a1;
+  });
+  const lg=rows.map((r,i)=>`<g transform="translate(300,${28+i*24})"><rect width="12" height="12" rx="2" style="fill:${r.color}"/><text x="19" y="10">${esc(r.label)}</text><text x="19" y="22" class="mute" style="font-size:10px">${nf(r.value)} · ${nf(r.value/tot*100)} %</text></g>`).join('');
+  const svg=`<svg viewBox="0 0 ${W} ${Math.max(H,40+rows.length*24)}" role="img">${p}<text x="${cx}" y="${cy-2}" text-anchor="middle" style="font-size:20px;font-weight:700">${center}</text>${center?`<text x="${cx}" y="${cy+16}" text-anchor="middle" class="mute">MMBPCE</text>`:''}${lg}</svg>`;
+  mount(id,svg,items,'list');
+}
+function hbar(id,rows,{fmt=nf,lw=130,W=620,rh=24}={}){
+  const max=Math.max(...rows.map(r=>r.value),1e-9),bw=W-lw-90,H=rows.length*rh+8;let s='';const items=[];
+  rows.forEach((r,i)=>{
+    const y=4+i*rh,w=Math.max(1,r.value/max*bw);
+    s+=`<text x="${lw-6}" y="${y+rh/2+3}" text-anchor="end">${esc(r.label.length>20?r.label.slice(0,19)+'…':r.label)}</text>
+    <rect class="mk${r.dim?' dim':''}${r.sel?' sel':''}" data-i="${i}" x="${lw}" y="${y+2}" width="${w}" height="${rh-6}" rx="3" style="fill:${r.color};stroke:transparent"/>
+    <text x="${lw+w+5}" y="${y+rh/2+3}" class="mute">${fmt(r.value)}</text>`;
+    items.push({tip:r.tip||`${r.label}: ${fmt(r.value)}`,action:r.action,cx:lw+w,cy:y});
+  });
+  mount(id,`<svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`,items,'list');
+}
+function vgroups(id,groups,series,{W=620,H=300}={}){
+  const m={l:50,r:10,t:10,b:44},iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const max=Math.max(...groups.flatMap(g=>g.vals),1e-9)*1.08;let s='',items=[];
+  for(let k=0;k<=4;k++){const y=m.t+ih-ih*k/4;s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" style="stroke:var(--line)"/><text x="${m.l-6}" y="${y+3}" text-anchor="end" class="mute">${nf0(max*k/4)}</text>`}
+  const gw=iw/groups.length;
+  groups.forEach((g,gi)=>{
+    const bw=gw*.7/series.length;
+    g.vals.forEach((v,si)=>{
+      const h=v/max*ih,x=m.l+gi*gw+gw*.15+si*bw,y=m.t+ih-h,i=gi*series.length+si;
+      s+=`<rect class="mk${g.dim?' dim':''}${g.sel?' sel':''}" data-i="${i}" x="${x}" y="${y}" width="${bw-2}" height="${Math.max(h,1)}" rx="2" style="fill:${series[si].color};stroke:transparent"/>`;
+      items.push({tip:`${g.label} · ${series[si].name}: ${nf(v)} MMBPCE`,action:g.action,cx:x,cy:y});
+    });
+    s+=`<text x="${m.l+gi*gw+gw/2}" y="${H-m.b+16}" text-anchor="middle">${esc(g.label)}</text>`;
+  });
+  mount(id,`<svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`,items,'list');
+}
+function vbars(id,rows,{W=620,H=280,fmt=nf0}={}){
+  const m={l:46,r:10,t:16,b:44},iw=W-m.l-m.r,ih=H-m.t-m.b,max=Math.max(...rows.map(r=>r.value),1)*1.1;let s='',items=[];
+  for(let k=0;k<=4;k++){const y=m.t+ih-ih*k/4;s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" style="stroke:var(--line)"/><text x="${m.l-6}" y="${y+3}" text-anchor="end" class="mute">${nf0(max*k/4)}</text>`}
+  const gw=iw/rows.length;
+  rows.forEach((r,i)=>{const h=r.value/max*ih,x=m.l+i*gw+gw*.15,y=m.t+ih-h;
+    s+=`<rect class="mk${r.dim?' dim':''}${r.sel?' sel':''}" data-i="${i}" x="${x}" y="${y}" width="${gw*.7}" height="${Math.max(h,1)}" rx="3" style="fill:${r.color};stroke:transparent"/><text x="${x+gw*.35}" y="${y-4}" text-anchor="middle">${fmt(r.value)}</text><text x="${x+gw*.35}" y="${H-m.b+16}" text-anchor="middle">${esc(r.label)}</text>`;
+    items.push({tip:r.tip||`${r.label}: ${fmt(r.value)}`,action:r.action,cx:x,cy:y})});
+  mount(id,`<svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`,items,'list');
+}
+function stackedH(id,rows,series,{W=900,lw=130,rh=26}={}){
+  const max=Math.max(...rows.map(r=>r.vals.reduce((a,b)=>a+b,0)),1e-9),bw=W-lw-90,H=rows.length*rh+8;let s='',items=[];
+  rows.forEach((r,i)=>{
+    const y=4+i*rh;let x=lw;s+=`<text x="${lw-6}" y="${y+rh/2+3}" text-anchor="end">${esc(r.label.length>20?r.label.slice(0,19)+'…':r.label)}</text>`;
+    r.vals.forEach((v,si)=>{const w=v/max*bw;
+      s+=`<rect class="mk${r.sel?' sel':''}" data-i="${i}" x="${x}" y="${y+2}" width="${Math.max(w,0)}" height="${rh-6}" style="fill:${series[si].color};stroke:transparent"/>`;x+=w});
+    s+=`<text x="${x+5}" y="${y+rh/2+3}" class="mute">${nf(r.vals.reduce((a,b)=>a+b,0))}</text>`;
+    items.push({tip:r.tip,action:r.action,cx:x,cy:y});
+  });
+  mount(id,`<svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`,items,'list');
+}
+function logTicks(lo,hi){const t=[];for(let e=Math.floor(Math.log10(lo));e<=Math.ceil(Math.log10(hi));e++)t.push(Math.pow(10,e));return t}
+function scatter(id,pts,{W=980,H=420}={}){
+  const m={l:56,r:16,t:12,b:44},iw=W-m.l-m.r,ih=H-m.t-m.b;
+  if(!pts.length){mount(id,`<svg viewBox="0 0 ${W} 60"><text x="20" y="35">Sin datos con los filtros actuales</text></svg>`,[],'xy');return}
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),xl=Math.min(...xs)*.7,xh=Math.max(...xs)*1.4,yl=Math.min(...ys)*.7,yh=Math.max(...ys)*1.4;
+  const X=v=>m.l+(Math.log10(v)-Math.log10(xl))/(Math.log10(xh)-Math.log10(xl))*iw, Y=v=>m.t+ih-(Math.log10(v)-Math.log10(yl))/(Math.log10(yh)-Math.log10(yl))*ih;
+  let s='';
+  logTicks(xl,xh).forEach(t=>{if(t<xl||t>xh)return;s+=`<line x1="${X(t)}" x2="${X(t)}" y1="${m.t}" y2="${m.t+ih}" style="stroke:var(--line)"/><text x="${X(t)}" y="${H-m.b+16}" text-anchor="middle" class="mute">${nf(t,t<1?2:0)}</text>`});
+  logTicks(yl,yh).forEach(t=>{if(t<yl||t>yh)return;s+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--line)"/><text x="${m.l-6}" y="${Y(t)+3}" text-anchor="end" class="mute">${nf(t,t<1?2:0)}</text>`});
+  s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" class="mute">Superficie (km², escala log)</text><text transform="translate(12,${m.t+ih/2}) rotate(-90)" text-anchor="middle" class="mute">Reserva ${state.cat.toUpperCase()} (MMBPCE, log)</text>`;
+  const items=[];
+  pts.forEach((p,i)=>{const cx=X(p.x),cy=Y(p.y);
+    s+=`<circle class="mk${p.sel?' sel':''}" data-i="${i}" cx="${cx}" cy="${cy}" r="${p.sel?7:4.5}" style="fill:${p.color};fill-opacity:.65;stroke:transparent"/>`;
+    items.push({tip:p.tip,action:p.action,cx,cy})});
+  mount(id,`<svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`,items,'xy');
+}
+function pareto(id,rows,{W=980,H=300}={}){
+  const m={l:46,r:16,t:12,b:36},iw=W-m.l-m.r,ih=H-m.t-m.b,n=rows.length;let s='';
+  if(!n){mount(id,`<svg viewBox="0 0 ${W} 60"><text x="20" y="35">Sin datos</text></svg>`,[],'list');return}
+  for(let k=0;k<=5;k++){const y=m.t+ih-ih*k/5;s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" style="stroke:var(--line)"/><text x="${m.l-6}" y="${y+3}" text-anchor="end" class="mute">${k*20} %</text>`}
+  const X=i=>m.l+(n>1?i/(n-1):0)*iw,Y=v=>m.t+ih-v/100*ih;
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(80)}" y2="${Y(80)}" style="stroke:var(--warn);stroke-dasharray:6 4"/>`;
+  s+=`<polyline fill="none" style="stroke:var(--accent);stroke-width:2.5" points="${rows.map((r,i)=>X(i)+','+Y(r.acc)).join(' ')}"/>`;
+  const items=[];
+  rows.forEach((r,i)=>{s+=`<circle class="mk${r.sel?' sel':''}" data-i="${i}" cx="${X(i)}" cy="${Y(r.acc)}" r="${n>120?2.4:3.5}" style="fill:var(--accent);stroke:transparent"/>`;items.push({tip:r.tip,action:r.action,cx:X(i),cy:Y(r.acc)})});
+  s+=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" class="mute">Campos ordenados de mayor a menor reserva →</text>`;
+  mount(id,`<svg viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`,items,'list');
+}
+
+/* ---------- selección y filtros ---------- */
+function selectField(n){state.sel=state.sel===n?null:n;renderAll()}
+function toggleUb(u){state.ub.has(u)?state.ub.delete(u):state.ub.add(u);renderAll()}
+function toggleKey(k,v){state[k]=state[k]===v?null:v;renderAll()}
+function resetAll(){state.ub.clear();state.q='';state.sel=null;state.tam=null;state.flu=null;state.tc=null;$('#q').value='';renderAll()}
+
+/* ---------- render ---------- */
+function renderBar(){
+  $('#segcat').innerHTML=Object.keys(CATS).map(c=>`<button aria-pressed="${state.cat===c}" data-c="${c}" title="${CATS[c]}">${c.toUpperCase()}</button>`).join('');
+  $('#chipub').innerHTML=UBS.map(u=>`<button class="chip" data-u="${u}" aria-pressed="${state.ub.has(u)}">${u}</button>`).join('');
+  const f=[];
+  state.ub.forEach(u=>f.push([`Ubicación: ${u}`,()=>state.ub.delete(u)]));
+  if(state.q)f.push([`Búsqueda: ${state.q}`,()=>{state.q='';$('#q').value=''}]);
+  if(state.tam)f.push([`Tamaño: ${state.tam}`,()=>state.tam=null]);
+  if(state.flu)f.push([`Fluido: ${state.flu}`,()=>state.flu=null]);
+  if(state.tc)f.push([`Comentario: ${state.tc}`,()=>state.tc=null]);
+  const box=$('#filters');box.innerHTML='';
+  f.forEach(([t,fn])=>{const b=document.createElement('button');b.className='chip';b.textContent=t+'  ✕';b.setAttribute('aria-label','Quitar filtro '+t);b.onclick=()=>{fn();renderAll()};box.appendChild(b)});
+}
+function renderDetail(){
+  const a=$('#det'),d=state.sel&&byName[state.sel];
+  if(!d){a.hidden=true;return}
+  a.hidden=false;
+  a.innerHTML=`<h2>${esc(d.nombre)} <span style="font-weight:400;color:var(--mute);font-size:14px">· #${d.rank_2p} por reserva 2P · ${esc(d.ubicacion)}</span></h2>
+  <dl>
+  <div><dt>1P</dt><dd>${nf(d.pce_1p,2)} MMBPCE</dd></div><div><dt>2P</dt><dd>${nf(d.pce_2p,2)} MMBPCE</dd></div><div><dt>3P</dt><dd>${nf(d.pce_3p,2)} MMBPCE</dd></div>
+  <div><dt>Certeza 1P/3P</dt><dd>${d.certeza_1p_3p==null?'—':nf(d.certeza_1p_3p*100,0)+' %'}</dd></div>
+  <div><dt>Superficie</dt><dd>${d.superficie_km2==null?'sin dato':nf(d.superficie_km2,2)+' km²'}</dd></div>
+  <div><dt>Crudo 2P</dt><dd>${nf(d.crudo_2p,2)} MMB</dd></div><div><dt>Gas 2P</dt><dd>${nf(d.gas_2p,2)} MMMPC</dd></div><div><dt>Condensado 2P</dt><dd>${nf(d.cond_2p,2)} MMB</dd></div>
+  <div><dt>Fluido dominante</dt><dd>${d.fluido_dominante}</dd></div><div><dt>% acumulado 2P</dt><dd>${nf(d.pct_acum_2p,1)} %</dd></div>
+  <div><dt>Vol. original crudo 1P</dt><dd>${nf(d.vo_crudo_1p,2)} MMB</dd></div><div><dt>Vol. original gas 1P</dt><dd>${nf(d.vo_gas_1p,2)} MMMPC</dd></div>
+  </dl>${d.comentario?`<p style="margin:8px 0 0"><b>Comentario del archivo:</b> ${esc(d.comentario)}</p>`:''}
+  <p style="margin:8px 0 0"><button class="btn" id="desel">Quitar selección</button></p>`;
+  $('#desel').onclick=()=>{state.sel=null;renderAll()};
+}
+function renderKpis(F){
+  const tot=c=>F.reduce((s,d)=>s+d['pce_'+c],0),nat=c=>DATA.reduce((s,d)=>s+d['pce_'+c],0);
+  const k=[['Campos',nf0(F.length),`de ${DATA.length} en el archivo`]];
+  ['1p','2p','3p'].forEach(c=>k.push([`Reserva ${c.toUpperCase()}`,nf0(tot(c)),`MMBPCE · ${nf(tot(c)/nat(c)*100,1)} % del total`]));
+  k.push(['Crudo '+state.cat.toUpperCase(),nf0(F.reduce((s,d)=>s+d['crudo_'+state.cat],0)),'millones de barriles']);
+  k.push(['Gas '+state.cat.toUpperCase(),nf0(F.reduce((s,d)=>s+d['gas_'+state.cat],0)),'MMMPC (miles de millones de pies³)']);
+  $('#kpis').innerHTML=k.map(([t,v,s])=>`<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+}
+function renderCharts(F){
+  const cat=state.cat,col='pce_'+cat;
+  // dona ubicación
+  const Fu=filtered('ub'),sumUb=u=>Fu.filter(d=>d.ubicacion===u).reduce((s,d)=>s+d[col],0);
+  donut('c-ub',UBS.map(u=>({label:u,value:sumUb(u),color:UBC[u],dim:state.ub.size&&!state.ub.has(u),sel:state.ub.has(u),action:()=>toggleUb(u),extra:` · ${Fu.filter(d=>d.ubicacion===u).length} campos`})),{center:nf0(UBS.reduce((s,u)=>s+sumUb(u),0))});
+  // top N
+  const top=[...F].sort((a,b)=>b[col]-a[col]).slice(0,state.topN);
+  hbar('c-top',top.map(d=>({label:d.nombre,value:d[col],color:UBC[d.ubicacion],sel:d.nombre===state.sel,action:()=>selectField(d.nombre),tip:`#${d.rank_2p} ${d.nombre} (${d.ubicacion}): ${nf(d[col])} MMBPCE ${cat.toUpperCase()}`})));
+  // pastel
+  const sorted=[...F].sort((a,b)=>b[col]-a[col]),t8=sorted.slice(0,8),rest=sorted.slice(8).reduce((s,d)=>s+d[col],0);
+  const pal=['#0f6b5c','#2b6cb0','#c98a0b','#8b5a2b','#b0558a','#5aa7d6','#7a8f3a','#a0522d'];
+  const rows=t8.map((d,i)=>({label:d.nombre,value:d[col],color:pal[i],sel:d.nombre===state.sel,action:()=>selectField(d.nombre)}));
+  rows.push({label:`Otros ${Math.max(sorted.length-8,0)} campos`,value:rest,color:'var(--line)',action:()=>{}});
+  donut('c-pie',rows,{inner:0.02,center:''});
+  // agrupado 1P/2P/3P
+  const Fg=filtered('ub');
+  vgroups('c-grp',UBS.map(u=>({label:u,vals:['1p','2p','3p'].map(c=>Fg.filter(d=>d.ubicacion===u).reduce((s,d)=>s+d['pce_'+c],0)),dim:state.ub.size&&!state.ub.has(u),sel:state.ub.has(u),action:()=>toggleUb(u)})),[{name:'1P',color:'var(--p1)'},{name:'2P',color:'var(--p2)'},{name:'3P',color:'var(--p3)'}]);
+  $('#lg-cat').innerHTML='<span><i style="background:var(--p1)"></i>1P</span><span><i style="background:var(--p2)"></i>2P</span><span><i style="background:var(--p3)"></i>3P</span>';
+  // fluido
+  const Ff=filtered('flu'),fl=['Aceite','Mixto','Gas'];
+  donut('c-flu',fl.map(f=>({label:f,value:Ff.filter(d=>d.fluido_dominante===f).reduce((s,d)=>s+d[col],0),color:FLC[f],dim:state.flu&&state.flu!==f,sel:state.flu===f,action:()=>toggleKey('flu',f),extra:` · ${Ff.filter(d=>d.fluido_dominante===f).length} campos`})),{center:''});
+  // composición
+  const Fc=filtered('ub'),cc='crudo_'+cat,gc='gas_'+cat,dc='cond_'+cat;
+  stackedH('c-comp',UBS.map(u=>{const g=Fc.filter(d=>d.ubicacion===u),cr=g.reduce((s,d)=>s+d[cc],0),co=g.reduce((s,d)=>s+d[dc],0),ga=g.reduce((s,d)=>s+d[gc],0)*0.2;
+    return{label:u,vals:[cr,co,ga],sel:state.ub.has(u),action:()=>toggleUb(u),tip:`${u}: crudo ${nf(cr)} MMB · condensado ${nf(co)} MMB · gas ${nf(ga)} MMBPCE equiv.`}}),[{color:'var(--aceite)'},{color:'var(--cond)'},{color:'var(--gas)'}],{W:620,lw:110});
+  // histograma tamaño
+  const Ft=filtered('tam');
+  vbars('c-tam',TAMS.map(t=>({label:t,value:Ft.filter(d=>d.tamano_2p===t).length,color:state.tam===t?'var(--ink)':'var(--accent)',dim:state.tam&&state.tam!==t,sel:state.tam===t,action:()=>toggleKey('tam',t),tip:`Campos con 2P ${t} MMBPCE: ${Ft.filter(d=>d.tamano_2p===t).length}`})));
+  // comentarios
+  const Fk=filtered('tc'),tcs=['Nuevo campo','Reserva asociada a clúster','Campo en evaluación','Sin comentario'];
+  hbar('c-com',tcs.map(t=>{const g=Fk.filter(d=>d.tipo_comentario===t);return{label:t,value:g.length,color:t==='Sin comentario'?'var(--line)':'var(--cond)',dim:state.tc&&state.tc!==t,sel:state.tc===t,action:()=>toggleKey('tc',t),tip:`${t}: ${g.length} campos · ${nf(g.reduce((s,d)=>s+d[col],0))} MMBPCE ${cat.toUpperCase()}`}}),{fmt:nf0,lw:190,W:640});
+  // dispersión
+  const pts=F.filter(d=>d.superficie_km2>0&&d[col]>0).map(d=>({x:d.superficie_km2,y:d[col],color:UBC[d.ubicacion],sel:d.nombre===state.sel,action:()=>selectField(d.nombre),tip:`${d.nombre} (${d.ubicacion}): ${nf(d.superficie_km2,2)} km² · ${nf(d[col])} MMBPCE · densidad ${nf(d[col]/d.superficie_km2,2)} MMBPCE/km²`}));
+  scatter('c-sc',pts);
+  // pareto
+  const s2=[...F].sort((a,b)=>b[col]-a[col]),T=s2.reduce((s,d)=>s+d[col],0)||1;let ac=0;
+  pareto('c-par',s2.map((d,i)=>{ac+=d[col];const a=ac/T*100;return{acc:a,sel:d.nombre===state.sel,action:()=>selectField(d.nombre),tip:`#${i+1} ${d.nombre}: ${nf(d[col])} MMBPCE · acumulado ${nf(a,1)} %`}}));
+  // apilado top 12
+  const t12=[...F].sort((a,b)=>b.pce_3p-a.pce_3p).slice(0,12);
+  stackedH('c-stk',t12.map(d=>({label:d.nombre,vals:[d.pce_1p,d.probables,d.posibles],sel:d.nombre===state.sel,action:()=>selectField(d.nombre),tip:`${d.nombre}: 1P ${nf(d.pce_1p)} + probable ${nf(d.probables)} + posible ${nf(d.posibles)} = 3P ${nf(d.pce_3p)} MMBPCE (certeza ${d.certeza_1p_3p==null?'—':nf(d.certeza_1p_3p*100,0)} %)`})),[{color:'var(--p1)'},{color:'var(--p2)'},{color:'var(--p3)'}]);
+}
+function renderHall(F){
+  const col='pce_'+state.cat,cat=state.cat.toUpperCase(),T=F.reduce((s,d)=>s+d[col],0),s=[...F].sort((a,b)=>b[col]-a[col]);
+  const L=[];
+  if(!F.length){$('#hall').innerHTML='<li>No hay campos con los filtros actuales.</li>';return}
+  L.push(`Los <b>${nf0(F.length)}</b> campos filtrados suman <b>${nf0(T)} MMBPCE</b> de reserva ${cat}.`);
+  if(T>0){
+    L.push(`El mayor es <b>${esc(s[0].nombre)}</b> (${nf0(s[0][col])} MMBPCE, ${nf(s[0][col]/T*100)} % del subtotal).`);
+    L.push(`Los 10 primeros concentran <b>${nf(s.slice(0,10).reduce((a,d)=>a+d[col],0)/T*100)} %</b>; bastan <b>${(()=>{let a=0,i=0;for(;i<s.length;i++){a+=s[i][col];if(a/T>=.8)break}return i+1})()}</b> campos para llegar a 80 %. La mediana por campo es solo ${nf(s[Math.floor(s.length/2)][col],2)} MMBPCE.`);
+  }
+  const ac=F.filter(d=>d.fluido_dominante==='Aceite').length,gs=F.filter(d=>d.fluido_dominante==='Gas').length;
+  L.push(`Por fluido: ${ac} campos son principalmente aceite, ${gs} principalmente gas y ${F.length-ac-gs} mixtos o sin reserva.`);
+  const big=F.filter(d=>d.pce_3p>=100&&d.certeza_1p_3p!=null).sort((a,b)=>a.certeza_1p_3p-b.certeza_1p_3p)[0];
+  if(big)L.push(`Mayor incertidumbre entre campos con 3P ≥ 100 MMBPCE: <b>${esc(big.nombre)}</b>, solo ${nf(big.certeza_1p_3p*100,0)} % de su 3P está probado (1P).`);
+  const gain=[...F].sort((a,b)=>b.probables-a.probables)[0];
+  if(gain&&gain.probables>0)L.push(`Mayor potencial de convertir reserva probable en probada: <b>${esc(gain.nombre)}</b> (+${nf0(gain.probables)} MMBPCE entre 1P y 2P).`);
+  const nv=F.filter(d=>d.tipo_comentario==='Nuevo campo');
+  if(nv.length)L.push(`Hay ${nv.length} ${nv.length===1?'campo marcado':'campos marcados'} "NUEVOS CAMPOS" que aportan ${nf0(nv.reduce((a,d)=>a+d[col],0))} MMBPCE (${nf(nv.reduce((a,d)=>a+d[col],0)/T*100)} %). Ejemplos grandes: ${nv.sort((a,b)=>b[col]-a[col]).slice(0,3).map(d=>esc(d.nombre)).join(', ')}.`);
+  const z=F.filter(d=>d.pce_2p<=0).length;if(z)L.push(`${z} campos tienen reserva 2P en cero (casi siempre solo tienen 3P o están asociados a un clúster).`);
+  $('#hall').innerHTML=L.map(x=>`<li>${x}</li>`).join('');
+}
+const COLS=[['rank_2p','#'],['nombre','Campo'],['ubicacion','Ubicación'],['superficie_km2','Sup. km²'],['pce_1p','1P'],['pce_2p','2P'],['pce_3p','3P'],['certeza_1p_3p','1P/3P'],['crudo_2p','Crudo 2P'],['gas_2p','Gas 2P'],['fluido_dominante','Fluido'],['comentario','Comentario']];
+function renderTable(F){
+  const {k,dir}=state.sort,rows=[...F].sort((a,b)=>{const x=a[k],y=b[k];if(x==null)return 1;if(y==null)return -1;return (x>y?1:x<y?-1:0)*dir});
+  $('#tbl thead').innerHTML='<tr>'+COLS.map(([c,t])=>`<th scope="col" aria-sort="${state.sort.k===c?(dir>0?'ascending':'descending'):'none'}"><button data-k="${c}">${t}${state.sort.k===c?(dir>0?' ▲':' ▼'):''}</button></th>`).join('')+'</tr>';
+  $('#tbl tbody').innerHTML=rows.map(d=>`<tr tabindex="0" data-n="${esc(d.nombre)}" class="${d.nombre===state.sel?'sel':''}"><td>${d.rank_2p}</td><td>${esc(d.nombre)}</td><td>${d.ubicacion}</td><td>${d.superficie_km2==null?'—':nf(d.superficie_km2,2)}</td><td>${nf(d.pce_1p,2)}</td><td>${nf(d.pce_2p,2)}</td><td>${nf(d.pce_3p,2)}</td><td>${d.certeza_1p_3p==null?'—':nf(d.certeza_1p_3p*100,0)+' %'}</td><td>${nf(d.crudo_2p,2)}</td><td>${nf(d.gas_2p,2)}</td><td>${d.fluido_dominante}</td><td class="cm" title="${esc(d.comentario)}">${esc(d.comentario)}</td></tr>`).join('');
+  $('#tcount').textContent=`${rows.length} campos`;
+}
+function renderQual(){
+  const q=RESUMEN.calidad||{};
+  $('#qual').innerHTML=[
+    `<b>${q.filas}</b> filas × ${q.columnas_origen} columnas; sin nombres duplicados (${q.duplicados_nombre}).`,
+    `<b>${q.sin_superficie}</b> campos sin superficie (vacía o 0): ${Object.entries(q.sin_superficie_por_ubicacion||{}).map(([k,v])=>`${k} ${v}`).join(', ')}. Los 14 de "Aguas someras" no traen superficie.`,
+    `Coherencia 1P ≤ 2P ≤ 3P: ${q.viola_1p_le_2p+q.viola_2p_le_3p===0?'<b>se cumple en todos los campos</b>':'hay violaciones'}.`,
+    `Sin reserva: ${q.sin_reserva_1p} campos con 1P = 0, ${q.sin_reserva_2p} con 2P = 0, ${q.sin_reserva_3p} con 3P = 0 (en los 7 de 3P = 0 el comentario dice que su reserva está en un clúster).`,
+    `Solo ${q.con_comentario} de ${q.filas} campos traen comentario: 29 "NUEVOS CAMPOS", 7 de clúster, 1 en evaluación.`,
+    `Factor de conversión gas→crudo equivalente, estimado de los datos: ≈ ${(q.factores_conversion?.['2p']?.gas_mmmpc_a_mmbpce||0).toFixed(2)} MMBPCE por MMMPC (los líquidos pesan ≈ 1.0).`,
+    `Las columnas de <i>volumen original</i> de 2P y 3P tienen valores mucho menores que las de 1P: parecen <b>incrementales</b>, no acumuladas (a diferencia de las reservas). Conviene confirmarlo en la nota metodológica de la CNH antes de sumarlas.`
+  ].map(x=>`<li>${x}</li>`).join('');
+  $('#tcom tbody').innerHTML=DATA.filter(d=>d.comentario).map((d,i)=>`<tr data-n="${esc(d.nombre)}"><td>${i+1}</td><td>${esc(d.nombre)}</td><td>${d.ubicacion}</td><td>${nf(d.pce_2p,2)}</td><td style="white-space:normal;text-align:left">${esc(d.comentario)}</td></tr>`).join('');
+}
+const GLOS=[
+['Campo','Área con uno o varios yacimientos de hidrocarburos descubiertos. Cada fila del archivo es un campo.'],
+['Reserva','Volumen de hidrocarburos descubierto, recuperable, comercial y remanente a la fecha de evaluación, ligado a un proyecto de desarrollo.'],
+['Recurso (contingente / prospectivo)','Volúmenes que aún no son reserva: los contingentes ya se descubrieron pero no son comerciales; los prospectivos aún no se descubren.'],
+['1P · Reservas probadas','Certeza razonable de recuperación. En términos probabilísticos, al menos 90 % de probabilidad (P90) de recuperar ese volumen o más.'],
+['2P · Probadas + Probables','1P más las probables. Al menos 50 % de probabilidad (P50). Es el estimado central y el más usado.'],
+['3P · Probadas + Probables + Posibles','2P más las posibles. Al menos 10 % de probabilidad (P10). Es el escenario optimista.'],
+['Probable / Posible','Probable = 2P − 1P. Posible = 3P − 2P. En este dashboard se calculan como diferencias de las columnas del archivo.'],
+['P90 / P50 / P10','Probabilidad mínima de que el volumen real sea igual o mayor al estimado: 90 %, 50 % y 10 %.'],
+['MMB','Millones de barriles (de crudo o condensado).'],
+['MMMPC','Miles de millones de pies cúbicos de gas natural (convención mexicana; en EE. UU. equivale a "Bcf").'],
+['PCE / MMBPCE','Petróleo crudo equivalente: unifica crudo, condensado y gas en una sola unidad (millones de barriles). En estos datos 1 MMMPC de gas ≈ 0.2 MMBPCE (estimado por regresión).'],
+['Crudo','Hidrocarburo líquido que se extrae del yacimiento y llega a superficie como aceite.'],
+['Condensado','Líquido que se forma al bajar la presión de un gas húmedo; se suma a los líquidos.'],
+['Gas natural','Mezcla de hidrocarburos en estado gaseoso, principalmente metano.'],
+['Volumen original','Cantidad total de hidrocarburos que se estima hay en el yacimiento, antes de producir. La reserva es solo la fracción recuperable.'],
+['Terrestre / Marino / Aguas someras','Clasificación de ubicación del archivo. El criterio exacto no viene en el CSV; en la regulación mexicana "aguas someras" suele referirse a tirantes de agua menores a 500 m.'],
+['Clúster','Grupo de campos cuya reserva se evalúa en conjunto. Los campos con ese comentario muestran la reserva en uno solo del grupo y ceros en los demás.'],
+['Nuevos campos','Descubrimientos recientes que se incorporan al inventario de reservas (comentario "NUEVOS CAMPOS").'],
+['Pozo','Perforación hecha para explorar o producir hidrocarburos. Un campo contiene muchos pozos.'],
+['Densidad de reserva','Reserva dividida entre superficie (MMBPCE por km²). Mide qué tan concentrada está.'],
+['Certeza 1P/3P','Qué porcentaje de la reserva 3P ya está probada. Bajo = mucha incertidumbre.']
+];
+$('#gl').innerHTML=GLOS.map(([t,d])=>`<div><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join('');
+
+/* ---------- mapa ---------- */
+let map=null,layerC=null,layerP=null;
+function loadStore(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}}
+function saveStore(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let coords=loadStore('mc_coords',null)||COORDS_INI, pozos=loadStore('mc_pozos',null)||POZOS_INI;
+function parseCsv(txt){
+  const L=txt.replace(/^﻿/,'').split(/\r?\n/).filter(Boolean);const h=L[0].split(',').map(x=>x.trim().toLowerCase());
+  return L.slice(1).map(l=>{const c=l.split(',');const o={};h.forEach((k,i)=>o[k]=(c[i]||'').trim());return o});
+}
+function loadLeaflet(cb){
+  if(window.L)return cb(true);
+  const l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(l);
+  const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=()=>cb(true);s.onerror=()=>cb(false);document.head.appendChild(s);
+}
+function renderMap(){
+  loadLeaflet(ok=>{
+    $('#mapfall').hidden=ok;if(!ok)return;
+    if(!map){map=L.map('map',{keyboard:true}).setView([22.5,-96],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12,attribution:'© OpenStreetMap'}).addTo(map);layerC=L.layerGroup().addTo(map);layerP=L.layerGroup().addTo(map)}
+    setTimeout(()=>map.invalidateSize(),50);
+    layerC.clearLayers();layerP.clearLayers();
+    const F=new Set(filtered().map(d=>d.nombre));let n=0;const col='pce_'+state.cat;
+    coords.forEach(c=>{const d=byName[(c.nombre||'').toUpperCase()];const lat=parseFloat(c.lat),lon=parseFloat(c.lon);
+      if(!d||isNaN(lat)||isNaN(lon)||!F.has(d.nombre))return;n++;
+      const r=Math.max(5,Math.sqrt(d[col])*1.1);
+      const m=L.circleMarker([lat,lon],{radius:Math.min(r,40),color:d.nombre===state.sel?'#000':'#fff',weight:2,fillColor:getComputedStyle(document.documentElement).getPropertyValue({Terrestre:'--terr',Marino:'--mar','Aguas someras':'--som'}[d.ubicacion]).trim(),fillOpacity:.75}).addTo(layerC);
+      m.bindTooltip(`${d.nombre} · ${nf0(d[col])} MMBPCE ${state.cat.toUpperCase()}${c.nota?' · '+c.nota:''}`);
+      m.on('click',()=>selectField(d.nombre));
+    });
+    pozos.forEach(p=>{const lat=parseFloat(p.lat),lon=parseFloat(p.lon);if(isNaN(lat)||isNaN(lon))return;
+      L.circleMarker([lat,lon],{radius:2.5,color:'#222',weight:1,fillColor:'#222',fillOpacity:.8}).addTo(layerP).bindTooltip(`Pozo ${p.pozo||''}${p.campo?' · '+p.campo:''}`)});
+    $('#mapinfo').textContent=`${n} campos y ${pozos.length} pozos ubicados · ${F.size-n} campos filtrados sin coordenadas`;
+  });
+}
+$('#fcamp').onchange=async e=>{const f=e.target.files[0];if(!f)return;coords=parseCsv(await f.text());saveStore('mc_coords',coords);renderMap()};
+$('#fpozo').onchange=async e=>{const f=e.target.files[0];if(!f)return;pozos=parseCsv(await f.text());saveStore('mc_pozos',pozos);renderMap()};
+$('#clrmap').onclick=()=>{coords=COORDS_INI;pozos=POZOS_INI;try{localStorage.removeItem('mc_coords');localStorage.removeItem('mc_pozos')}catch(e){}renderMap()};
+
+/* ---------- pestañas ---------- */
+const TABS=[['resumen','Resumen'],['graficas','Gráficas'],['campos','Campos (tabla)'],['mapa','Mapa'],['calidad','Calidad y comentarios'],['glosario','Glosario'],['ayuda','Ayuda']];
+let tab='resumen';
+function showTab(t,focus){
+  tab=t;
+  $('#tabs').innerHTML=TABS.map(([k,n],i)=>`<button role="tab" id="tab-${k}" data-t="${k}" aria-selected="${k===t}" tabindex="${k===t?0:-1}" aria-controls="t-${k}">${i+1}. ${n}</button>`).join('');
+  $$('section.tp').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));
+  if(t==='mapa')renderMap();
+  if(focus)$('#tab-'+t).focus();
+}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)showTab(b.dataset.t)});
+$('#tabs').addEventListener('keydown',e=>{
+  const i=TABS.findIndex(x=>x[0]===tab);
+  if(e.key==='ArrowRight'){e.preventDefault();showTab(TABS[(i+1)%TABS.length][0],true)}
+  if(e.key==='ArrowLeft'){e.preventDefault();showTab(TABS[(i+TABS.length-1)%TABS.length][0],true)}
+  if(e.key==='Home'){e.preventDefault();showTab(TABS[0][0],true)}
+  if(e.key==='End'){e.preventDefault();showTab(TABS[TABS.length-1][0],true)}
+});
+
+/* ---------- eventos globales ---------- */
+$('#segcat').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){state.cat=b.dataset.c;renderAll()}});
+$('#chipub').addEventListener('click',e=>{const b=e.target.closest('[data-u]');if(b)toggleUb(b.dataset.u)});
+$('#q').addEventListener('input',e=>{state.q=e.target.value;renderAll()});
+$('#reset').onclick=resetAll;
+$('#topn').addEventListener('input',e=>{state.topN=+e.target.value;$('#topno').textContent=e.target.value;renderAll()});
+$('#tbl thead').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;state.sort=state.sort.k===k?{k,dir:-state.sort.dir}:{k,dir:(k==='nombre'||k==='ubicacion'||k==='fluido_dominante'||k==='comentario'||k==='rank_2p')?1:-1};renderTable(filtered())});
+$('#tbl tbody').addEventListener('click',e=>{const r=e.target.closest('tr');if(r)selectField(r.dataset.n)});
+$('#tbl tbody').addEventListener('keydown',e=>{const r=e.target.closest('tr');if(!r)return;
+  if(e.key==='Enter'){selectField(r.dataset.n)}
+  if(e.key==='ArrowDown'&&r.nextElementSibling){e.preventDefault();r.nextElementSibling.focus()}
+  if(e.key==='ArrowUp'&&r.previousElementSibling){e.preventDefault();r.previousElementSibling.focus()}});
+$('#tcom tbody').addEventListener('click',e=>{const r=e.target.closest('tr');if(r)selectField(r.dataset.n)});
+function download(name,txt,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('#dlcsv').onclick=()=>{const F=filtered(),keys=Object.keys(DATA[0]);const q=v=>v==null?'':/[",\n]/.test(String(v))?`"${String(v).replace(/"/g,'""')}"`:v;
+  download('campos_filtrados.csv','﻿'+[keys.join(','),...F.map(d=>keys.map(k=>q(d[k])).join(','))].join('\n'),'text/csv')};
+$('#dljson').onclick=()=>download('campos_filtrados.json',JSON.stringify(filtered(),null,1),'application/json');
+document.addEventListener('keydown',e=>{
+  const t=e.target;if(t.matches('input,select,textarea'))return;if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(/^[1-7]$/.test(e.key)){showTab(TABS[+e.key-1][0],true);return}
+  if(e.key==='p'||e.key==='P'){const ks=Object.keys(CATS);state.cat=ks[(ks.indexOf(state.cat)+1)%3];renderAll()}
+  else if(e.key==='u'||e.key==='U'){const cur=state.ub.size===1?[...state.ub][0]:null;const order=[null,...UBS];const nx=order[(order.indexOf(cur)+1)%order.length];state.ub.clear();if(nx)state.ub.add(nx);renderAll()}
+  else if(e.key==='/'){e.preventDefault();$('#q').focus()}
+  else if(e.key==='Escape'){resetAll()}
+  else if(e.key==='?'){showTab('ayuda',true)}
+});
+
+function renderAll(){
+  const F=filtered();
+  renderBar();renderDetail();renderKpis(F);renderCharts(F);renderHall(F);renderTable(F);
+  if(tab==='mapa')renderMap();
+}
+renderQual();showTab('resumen');renderAll();
+</script>
+</body>
+</html>
