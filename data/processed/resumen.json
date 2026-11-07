@@ -1,0 +1,119 @@
+{
+  "totales": {
+    "pce_1p": 8358.65,
+    "pce_2p": 15497.21,
+    "pce_3p": 23089.43,
+    "crudo_1p": 5964.62,
+    "crudo_2p": 11057.96,
+    "crudo_3p": 16341.12,
+    "gas_1p": 12246.17,
+    "gas_2p": 23239.89,
+    "gas_3p": 34782.99,
+    "cond_1p": 76.45,
+    "cond_2p": 133.6,
+    "cond_3p": 177.6
+  },
+  "por_ubicacion": {
+    "Aguas someras": {
+      "campos": 14,
+      "pce_1p": 104.8,
+      "pce_2p": 740.7,
+      "pce_3p": 1093.75,
+      "superficie": 0.0
+    },
+    "Marino": {
+      "campos": 106,
+      "pce_1p": 4996.1,
+      "pce_2p": 8144.93,
+      "pce_3p": 12217.98,
+      "superficie": 2817.65
+    },
+    "Terrestre": {
+      "campos": 357,
+      "pce_1p": 3257.75,
+      "pce_2p": 6611.58,
+      "pce_3p": 9777.7,
+      "superficie": 17329.73
+    }
+  },
+  "top10_participacion_2p": 46.8,
+  "campos_para_80pct_2p": 52,
+  "mediana_pce_2p": 2.4,
+  "media_pce_2p": 32.49,
+  "por_fluido": {
+    "Aceite": {
+      "count": 226,
+      "sum": 10195.26
+    },
+    "Gas": {
+      "count": 170,
+      "sum": 1532.8
+    },
+    "Mixto": {
+      "count": 74,
+      "sum": 3769.15
+    },
+    "Sin reserva": {
+      "count": 7,
+      "sum": 0.0
+    }
+  },
+  "por_comentario": {
+    "Campo en evaluación": {
+      "pce_1p": 6.44,
+      "pce_2p": 10.5,
+      "pce_3p": 25.46,
+      "campos": 1
+    },
+    "Nuevo campo": {
+      "pce_1p": 261.14,
+      "pce_2p": 986.56,
+      "pce_3p": 1522.66,
+      "campos": 29
+    },
+    "Reserva asociada a clúster": {
+      "pce_1p": 5.42,
+      "pce_2p": 9.88,
+      "pce_3p": 13.28,
+      "campos": 7
+    },
+    "Sin comentario": {
+      "pce_1p": 8085.65,
+      "pce_2p": 14490.27,
+      "pce_3p": 21528.03,
+      "campos": 440
+    }
+  },
+  "calidad": {
+    "filas": 477,
+    "columnas_origen": 22,
+    "duplicados_nombre": 0,
+    "sin_superficie": 48,
+    "sin_superficie_por_ubicacion": {
+      "Terrestre": 31,
+      "Aguas someras": 14,
+      "Marino": 3
+    },
+    "con_comentario": 37,
+    "sin_reserva_1p": 65,
+    "sin_reserva_2p": 31,
+    "sin_reserva_3p": 7,
+    "sin_reserva_total": 7,
+    "viola_1p_le_2p": 0,
+    "viola_2p_le_3p": 0,
+    "factores_conversion": {
+      "1p": {
+        "liquidos": 0.991,
+        "gas_mmmpc_a_mmbpce": 0.201
+      },
+      "2p": {
+        "liquidos": 0.979,
+        "gas_mmmpc_a_mmbpce": 0.199
+      },
+      "3p": {
+        "liquidos": 0.963,
+        "gas_mmmpc_a_mmbpce": 0.209
+      }
+    }
+  }
+}
