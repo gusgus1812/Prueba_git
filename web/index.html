@@ -155,7 +155,7 @@ footer{padding:20px 24px;color:var(--mute);font-size:12.5px;text-align:center}
 <section class="tp" id="t-mapa" role="tabpanel">
   <p class="note"><b>Sobre el mapa:</b> el archivo de reservas no incluye coordenadas, y el <a href="https://mapa-hidrocarburos.energia.gob.mx/" target="_blank" rel="noopener">Mapa de Hidrocarburos</a> (CNH/SENER) mostraba un aviso de mantenimiento cuando lo consulté, sin ofrecer descarga directa. Por eso aquí solo hay unos pocos campos con una ubicación <b>referencial</b> (±50 km o más). Carga tus propios archivos abajo y el mapa se llena con todo. Ver <code>docs/fuente_mapa.md</code>.</p>
   <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;align-items:center;font-size:13px">
-    <label>Coordenadas de campos (CSV <code>nombre,lat,lon</code>) <input type="file" id="fcamp" accept=".csv"></label>
+    <label>Cordenadas de campos (CSV <code>nombre,lat,lon</code>) <input type="file" id="fcamp" accept=".csv"></label>
     <label>Pozos (CSV <code>pozo,lat,lon,campo</code>) <input type="file" id="fpozo" accept=".csv"></label>
     <button class="btn" id="clrmap">Borrar mis archivos cargados</button>
     <span id="mapinfo" style="color:var(--mute)"></span>
